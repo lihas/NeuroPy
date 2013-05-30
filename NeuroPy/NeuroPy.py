@@ -172,7 +172,6 @@ class NeuroPy(object):
     @property
     def attention(self):
         "Get value for attention"
-        print "aaa"
         return self.__attention
     @attention.setter
     def attention(self,value):

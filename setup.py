@@ -6,5 +6,5 @@ setup(name = "NeuroPy",
       author = "sahil singh",
       author_email = "lihashgnis@yahoo.in",
       url = "https://github.com/lihas/NeuroPy",
-      packages=["NeuroPy"]
+      packages=['NeuroPy']
       )

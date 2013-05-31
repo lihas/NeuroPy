@@ -56,3 +56,6 @@ i.e. `object1.stop()`
     while True:
         if(object1.meditation>70): #another way of accessing data provided by headset (1st being call backs)
             object1.stop()         #if meditation level reaches above 70, stop fetching data from the headset
+
+###More Information###
+[lihashgnis.blogspot.in](http://lihashgnis.blogspot.in/2013/05/neuropy-python-library-for-interfacing.html)

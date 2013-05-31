@@ -8,7 +8,7 @@ with Neurosky Mindwave EEG headset.
 
 ##Installation##
 
-1. Download the source distribution (zip file) from [dist directory](https://github.com/lihas/NeuroPy/tree/master/dist)
+1. Download the source distribution (zip file) from [dist directory](https://github.com/lihas/NeuroPy/tree/master/dist) or from [PyPi](https://pypi.python.org/pypi/NeuroPy/0.1)
 2. unzip and navigate to the folder containing _setup.py_ and other files
 3. run the following command:
     `python setup.py install`

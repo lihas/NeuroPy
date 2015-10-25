@@ -6,7 +6,7 @@ NeuroPy library written in python to connect, interact and get data from __neuro
 This library is based on the minwave mindset communication protocol published by [Neurosky](http:://neurosky.com) and is tested
 with Neurosky Mindwave EEG headset.
 
-Note: I only have MindWave mobile, and therefore this library is supposed to work on it. I do not promise if it
+__Note:__ I only have MindWave mobile, and therefore this library is supposed to work on it. I do not promise if it
 will work on other models. Another library which was suggested to me after I wrote this library can be found [HERE](https://github.com/BarkleyUS/mindwave-python). I have not tested that library, and cannot give any gurantees. More about the difference between the models of MindWave can be found [HERE](http://support.neurosky.com/kb/general-21/what-is-the-difference-between-the-mindset-mindwave-mindwave-mobile-and-xwave).
 
 ##Installation##

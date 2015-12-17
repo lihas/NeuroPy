@@ -27,7 +27,7 @@
 ##SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import serial
-import thread
+from threading import Thread
 
 class NeuroPy(object):
     """NeuroPy libraby, to get data from neurosky mindwave.
@@ -58,27 +58,49 @@ class NeuroPy(object):
     __midGamma=0    
     __poorSignal=0
     __blinkStrength=0
+	
     srl=None
-    __port=None
-    __baudRate=None
-    
-    threadRun=True #controlls the running of thread
+    serialPort=None
+    serialBaudRate=None
+    parserThread = None
+    threadRun=False
+	
     callBacksDictionary={} #keep a track of all callbacks
     def __init__(self,port,baudRate=57600):
-        self.__port,self.__baudRate=port,baudRate
+        self.serialPort     = port
+        self.serialBaudRate = baudRate
         
+	  # Try to connect to serial on initialization
+        try:
+            self.srl = serial.Serial(self.serialPort,self.serialBaudRate)
+        except serial.serialutil.SerialException, e:
+            print str(e)
+			
     def __del__(self):
-        self.srl.close()
+        # Prepare everything for a save exit
+        if self.threadRun == True:
+            self.stop()
+            
+        if self.srl != None:
+            if self.srl.closed == False:
+                self.srl.close()
     
     def start(self):
         """starts packetparser in a separate thread"""
-        self.threadRun=True
-        self.srl=serial.Serial(self.__port,self.__baudRate)
-        thread.start_new_thread(self.__packetParser,(self.srl,))
+        if self.srl == None:
+            print "Error: serial connection not available"
+            return
+            
+        if self.srl.closed == False and self.threadRun == False:
+            print "Starting thread"
+            self.srl.flushInput()
+            self.packetsReceived = 0
+            self.parserThread = Thread(target=self.__packetParser, args = ())
+            self.parserThread.start()
+            self.threadRun=True
    
     def __packetParser(self,srl):
         "packetParser runs continously in a separate thread to parse packets from mindwave and update the corresponding variables"
-        #srl.open()
         while self.threadRun:
             p1=srl.read(1).encode("hex") #read first 2 packets
             p2=srl.read(1).encode("hex")
@@ -154,9 +176,10 @@ class NeuroPy(object):
 
         
     def stop(self):
-        "stops packetparser's thread and releases com port i.e disconnects mindwave"
-        self.threadRun=False
-        self.srl.close()
+        # Stops a running parser thread
+        if self.threadRun == True:
+            self.threadRun=False
+            self.parserThread.join()
         
     
                     

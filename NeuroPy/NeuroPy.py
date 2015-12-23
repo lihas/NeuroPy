@@ -58,66 +58,65 @@ class NeuroPy(object):
     __midGamma=0    
     __poorSignal=0
     __blinkStrength=0
-	
-    srl=None
-    serialPort=None
-    serialBaudRate=None
-    parserThread = None
-    threadRun=False
-	
+
     callBacksDictionary={} #keep a track of all callbacks
     def __init__(self,port,baudRate=57600):
-        self.serialPort     = port
-        self.serialBaudRate = baudRate
+        self.__serialPort       = port
+        self.__serialBaudRate   = baudRate
+        self.__packetsReceived  = 0
         
-	  # Try to connect to serial on initialization
-        try:
-            self.srl = serial.Serial(self.serialPort,self.serialBaudRate)
-        except serial.serialutil.SerialException, e:
-            print str(e)
-			
-    def __del__(self):
-        # Prepare everything for a save exit
-        if self.threadRun == True:
+        self.__parserThread   = None
+        self.__threadRun      = False
+        self.__srl            = None
+        
+    def __del__(self):      
+        if self.__threadRun == True:
             self.stop()
-            
-        if self.srl != None:
-            if self.srl.closed == False:
-                self.srl.close()
     
     def start(self):
-        """starts packetparser in a separate thread"""
-        if self.srl == None:
-            print "Error: serial connection not available"
+        # Try to connect to serial port and start a separate thread
+        # for data collection
+        if self.__threadRun == True:
+            print "Mindwave has already started!"
             return
+        
+        if self.__srl == None:
+            try:
+                self.__srl = serial.Serial(self.__serialPort,self.__serialBaudRate)
+            except serial.serialutil.SerialException, e:
+                print str(e)
+                return
+        else:
+            self.__srl.open()
             
-        if self.srl.closed == False and self.threadRun == False:
-            print "Starting thread"
-            self.srl.flushInput()
-            self.packetsReceived = 0
-            self.parserThread = Thread(target=self.__packetParser, args = ())
-            self.parserThread.start()
-            self.threadRun=True
+        self.__srl.flushInput()
+        self.__packetsReceived = 0
+        self.__parserThread = Thread(target=self.__packetParser, args = ())
+        self.__threadRun=True
+        self.__parserThread.start()
    
-    def __packetParser(self,srl):
+    def __packetParser(self):
         "packetParser runs continously in a separate thread to parse packets from mindwave and update the corresponding variables"
-        while self.threadRun:
-            p1=srl.read(1).encode("hex") #read first 2 packets
-            p2=srl.read(1).encode("hex")
-            while p1!='aa' or p2!='aa':
+        while self.__threadRun:
+            p1=self.__srl.read(1).encode("hex") #read first 2 packets
+            p2=self.__srl.read(1).encode("hex")
+            while (p1!='aa' or p2!='aa') and self.__threadRun:
                 p1=p2
-                p2=srl.read(1).encode("hex")
+                p2=self.__srl.read(1).encode("hex")
             else:
+                if self.__threadRun == False:
+                    break
                 #a valid packet is available
+                self.__packetsReceived += 1
                 payload=[]
                 checksum=0;
-                payloadLength=int(srl.read(1).encode("hex"),16)
+                payloadLength=int(self.__srl.read(1).encode("hex"),16)
                 for i in range(payloadLength):
-                    tempPacket=srl.read(1).encode("hex")
+                    tempPacket=self.__srl.read(1).encode("hex")
                     payload.append(tempPacket)
                     checksum+=int(tempPacket,16)
                 checksum=~checksum&0x000000ff
-                if checksum==int(srl.read(1).encode("hex"),16):
+                if checksum==int(self.__srl.read(1).encode("hex"),16):
                    i=0
                    while i<payloadLength:
                        code=payload[i]
@@ -172,18 +171,14 @@ class NeuroPy(object):
                        else:
                            pass
                        i=i+1
-
-
         
     def stop(self):
         # Stops a running parser thread
-        if self.threadRun == True:
-            self.threadRun=False
-            self.parserThread.join()
+        if self.__threadRun == True:
+            self.__threadRun=False
+            self.__parserThread.join()
+            self.__srl.close()
         
-    
-                    
-                    
     def setCallBack(self,variable_name,callback_function):
         """Setting callback:a call back can be associated with all the above variables so that a function is called when the variable is updated. Syntax: setCallBack("variable",callback_function)
            for eg. to set a callback for attention data the syntax will be setCallBack("attention",callback_function)"""
@@ -191,6 +186,18 @@ class NeuroPy(object):
         
     #setting getters and setters for all variables
     
+    #packets received
+    @property
+    def packetsReceived(self):
+        return self.__packetsReceived
+    
+    @property
+    def bytesAvailable(self):
+        if self.__threadRun:
+            return self.__srl.inWaiting()
+        else:
+            return -1
+            
     #attention
     @property
     def attention(self):

@@ -100,16 +100,11 @@ class NeuroPy(object):
         self.__srl.write(DISCONNECT)
 
     def connect(self):
-        self.__srl.write(''.join([CONNECT, self.__devid.decode('hex')]))
-        print("Trying to connect dongle ", self.__devid, "...")
-        return
-        while not self.__connected:
-            self.__srl.write(''.join([CONNECT, self.__devid.decode('hex')]))
-            time.sleep(0.5)
+        if not self.__devid:
+            self.__connected = True
+            return # Only connect RF devices
 
-    def autoconnect(self):
-        self.__srl.write(DISCONNECT)
-        self.__srl.write(AUTOCONNECT)
+        self.__srl.write(''.join([CONNECT, self.__devid.decode('hex')]))
 
     def start(self):
         # Try to connect to serial port and start a separate thread
@@ -128,10 +123,10 @@ class NeuroPy(object):
         else:
             self.__srl.open()
 
-        if (self.__devid != None):
-            self.connect()
-
         self.__srl.flushInput()
+
+        if self.__devid:
+            self.connect();
 
         self.__packetsReceived = 0
         self.__parserThread = Thread(target=self.__packetParser, args=())
@@ -174,9 +169,11 @@ class NeuroPy(object):
                             print("Disconnected!")
                             self.connect()
                         elif(code == 'd3'):
-                            print("denied!")
+                            print("Headset denied operation!")
                         elif(code == 'd4'):
-                            print(payload[2])
+                            if payload[2] == 0 and not self.__connected:
+                                print("Idle, trying to reconnect");
+                                self.connect();
                         elif(code == '02'):  # poorSignal
                             i = i + 1
                             self.poorSignal = int(payload[i], 16)

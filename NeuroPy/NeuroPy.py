@@ -28,8 +28,8 @@
 
 import serial
 import time
+import sys
 from threading import Thread
-
 
 # Byte codes
 CONNECT = '\xc0'
@@ -47,7 +47,6 @@ HEADSET_DISCONNECTED = '\xd2'
 REQUEST_DENIED = '\xd3'
 STANDBY_SCAN = '\xd4'
 RAW_VALUE = '\x80'
-
 
 class NeuroPy(object):
     """NeuroPy libraby, to get data from neurosky mindwave.
@@ -81,7 +80,14 @@ class NeuroPy(object):
 
     callBacksDictionary = {}  # keep a track of all callbacks
 
-    def __init__(self, port, baudRate=57600, devid=None):
+    def __init__(self, port = None, baudRate=57600, devid=None):
+        if port == None:
+            platform = sys.platform
+            if platform == "win32":
+                port = "COM6"
+            elif platform.startswith("linux") or platform == 'darwin':
+                port = "/dev/rfcomm0"
+
         self.__devid = devid
         self.__serialPort = port
         self.__serialBaudRate = baudRate

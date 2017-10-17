@@ -1,64 +1,85 @@
-NeuroPy
-=======
+# NeuroPy
 
-NeuroPy library written in python to connect, interact and get data from __neurosky's MindWave__ EEG headset.
+NeuroPy library written in python to connect, interact and get data from **NeuroSky's MindWave** EEG headset.
 
-This library is based on the minwave mindset communication protocol published by [Neurosky](http:://neurosky.com) and is tested
-with Neurosky Mindwave EEG headset.
+This library is based on the mindwave mindset communication protocol published by [Neurosky](http:://neurosky.com) and is tested with Neurosky Mindwave EEG headset.
 
-__Note:__ I only have MindWave mobile, and therefore this library is supposed to work on it. I do not promise if it
-will work on other models. Another library which was suggested to me after I wrote this library can be found [HERE](https://github.com/BarkleyUS/mindwave-python). I have not tested that library, and cannot give any gurantees. More about the difference between the models of MindWave can be found [HERE](http://support.neurosky.com/kb/general-21/what-is-the-difference-between-the-mindset-mindwave-mindwave-mobile-and-xwave).
-
-##Installation##
+## Installation
 
 1. Download the source distribution (zip file) from [dist directory](https://github.com/lihas/NeuroPy/tree/master/dist) or from [PyPi](https://pypi.python.org/pypi/NeuroPy/0.1)
-2. unzip and navigate to the folder containing _setup.py_ and other files
-3. run the following command:
-    `python setup.py install`
+2. Unzip and navigate to the folder containing `setup.py` and other files
+3. Run the following command: `python setup.py install`
 
-##Usage##
+## Usage
 
 1. Importing the module: `from NeuroPy import NeuroPy`
+2. Initializing: `neuropy = NeuroPy()`
+3. After initializing, if required the callbacks can be set
+4. Then call `neuropy.start()` method, it will start fetching data from mindwave.
+5. To stop call `neuropy.stop()`
 
-1. Initialising: `object1=NeuroPy("COM6",57600)` _#windows_ <br /> `object1=NeuroPy("/dev/rfcomm0",57600)` _#linux_
+### Obtaining Data from Device 
 
-1. After initialising , if required the callbacks must be set
-then using the start method the library will start fetching data from mindwave
-i.e. `object1.start()`
-similarly stop method can be called to stop fetching the data
-i.e. `object1.stop()`
+* **Obtaining value:** `attention = neuropy.attention` \#to get value of attention_
+    >**Other Variable** attention, meditation, rawValue, delta, theta, lowAlpha, highAlpha, lowBeta, highBeta, lowGamma, midGamma, poorSignal and blinkStrength
 
-###The data from the device can be obtained using either of the following methods or bot of them together:###
-    
-* Obtaining value: `variable1=object1.attention` _\#to get value of attention_
-    >__\#other variables:__ attention,meditation,rawValue,delta,theta,lowAlpha,highAlpha,lowBeta,highBeta,lowGamma,midGamma, poorSignal and blinkStrength
-    
-* Setting callback:a call back can be associated with all the above variables so that a function is called when the variable is updated. Syntax: `setCallBack("variable",callback_function)` <br />
-    __for eg.__ to set a callback for attention data the syntax will be `setCallBack("attention",callback_function)`
-    
-    >__\#other variables:__ attention,meditation,rawValue,delta,theta,lowAlpha,highAlpha,lowBeta,highBeta,lowGamma,midGamma, poorSignal and blinkStrength
+* **Setting callback:** A call back can be associated with all the above variables so that a function is called when the variable is updated. Syntax: 
 
-##Sample Program##
-    
-    from NeuroPy import NeuroPy
-    object1=NeuroPy("COM6") #If port not given 57600 is automatically assumed
-                            #object1=NeuroPy("/dev/rfcomm0") for linux
-    def attention_callback(attention_value):
-        "this function will be called everytime NeuroPy has a new value for attention"
-        print "Value of attention is",attention_value
-        #do other stuff (fire a rocket), based on the obtained value of attention_value
-        #do some more stuff
-        return None
-    
-    #set call back:
-    object1.setCallBack("attention",attention_callback)
-    
-    #call start method
-    object1.start()
-    
+    ```
+    setCallBack("[variable]",callback_function)
+    ``` 
+    **for eg.** to set a callback for attention data the syntax will be 
+    ```
+    setCallBack("attention",callback_function)
+    ```
+    >**Other Variables:** attention, meditation, rawValue, delta, theta, lowAlpha, highAlpha, lowBeta, highBeta, lowGamma, midGamma, poorSignal and blinkStrength
+
+## Sample Program 1 (Access via callback)
+
+```python
+from NeuroPy import NeuroPy
+from time import sleep
+
+neuropy = NeuroPy() 
+
+def attention_callback(attention_value):
+    """this function will be called everytime NeuroPy has a new value for attention"""
+    print ("Value of attention is: ", attention_value)
+    return None
+
+neuropy.setCallBack("attention", attention_callback)
+neuropy.start()
+
+try:
     while True:
-        if(object1.meditation>70): #another way of accessing data provided by headset (1st being call backs)
-            object1.stop()         #if meditation level reaches above 70, stop fetching data from the headset
+        sleep(0.2)
+finally:
+    neuropy.stop()
+```
 
-###More Information###
-[lihashgnis.blogspot.in](http://lihashgnis.blogspot.in/2013/05/neuropy-python-library-for-interfacing.html)
+
+## Sample Program 2 (Access via object)
+
+```python
+from NeuroPy import NeuroPy
+from time import sleep
+
+neuropy = NeuroPy() 
+neuropy.start()
+
+while True:
+    if neuropy.meditation > 70: # Access data through object
+        neuropy.stop() 
+    sleep(0.2) # Don't eat the CPU cycles
+```
+
+## Python Compatibility
+
+* [Python](http://www.python.com) - v2.7.* and v3.*
+
+### Note
+
+I only have MindWave mobile, and therefore this library is supposed to work on it. I do not promise if it will work on other models. Another library which was suggested to me after I wrote this library can be found [HERE](https://github.com/BarkleyUS/mindwave-python). I have not tested that library, and cannot give any guarantees. More about the difference between the models of MindWave can be found [HERE](http://support.neurosky.com/kb/general-21/what-is-the-difference-between-the-mindset-mindwave-mindwave-mobile-and-xwave).
+
+### More Information
+[lihashgnis.blogspot.in](http://lihashgnis.blogspot.in/2013/05/neuropy-python-library-for-interfacing.html) - A blog post
